@@ -1,38 +1,29 @@
--- script build an island
+-- credit toàn đẹp zai vcl
+-- vô đây nhìn cái gì ???
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window = Rayfield:CreateWindow({
-	Name = "ayypwm hub| Build an Island V1",
+	Name = "ayypwm hub | Build an Island V1 🇻🇳",
 	LoadingTitle = "ayypwm Hub",
 	LoadingSubtitle = "script loading",
 	ConfigurationSaving = {
 		Enabled = true,
-		FolderName = "ayypwmhubIsland", -- lưu trong workspace local
-		FileName = "BuildConfig"
+		FolderName = "ayypwmhubIsland",
+		FileName = "buildanislandayypwmhub"
 	},
-	KeySystem = false -- không cần key
+	KeySystem = false 
 })
 
--- TAB 1: INFO
 local Tab_Info = Window:CreateTab("📄 Info Script", 4483362458)
 Tab_Info:CreateParagraph({
 	Title = "ayypwm Hub",
 	Content = "Script nokey"
 })
 
-Tab_Info:CreateButton({
-	Name = "❤️ Donate Robux (Ủng hộ 37R$)",
-	Callback = function()
-		local MarketplaceService = game:GetService("MarketplaceService")
-		local Players = game:GetService("Players")
-		local player = Players.LocalPlayer
-		MarketplaceService:PromptGamePassPurchase(player, 1284506367)
-	end,
-})
 
 Tab_Info:CreateParagraph({
     Title = "Ủng hộ ",
-    Content = "Nếu bạn thấy script hữu ích, hãy ủng hộ mình bằng cách vượt qua link bên dưới. Cảm ơn bạn rất nhiều <3"
+    Content = "Nếu bạn thấy script hữu ích, hãy ủng hộ mình bằng cách vượt qua link bên dưới để mình có động lực phát triển script Cảm ơn bạn rất nhiều <3"
 })
 
 Tab_Info:CreateButton({
@@ -43,17 +34,13 @@ Tab_Info:CreateButton({
     end
 })
 
--- TAB 2: FARM
 local Tab_Farm = Window:CreateTab("⚒️ Farm", 4483362458)
-
--- 🌾 Auto Farm toàn đảo có chọn người chơi
 
 local SelectedPlayer = game.Players.LocalPlayer.Name
 local AutoFarm = false
 local PlayerList = {}
 local Dropdown_FarmTarget = nil
 
--- 🔧 Hàm tìm tài nguyên trong đảo người chơi
 local function getResources(playerName)
 	local plots = game:GetService("Workspace"):WaitForChild("Plots")
 	local targetPlot = plots:FindFirstChild(playerName)
@@ -63,7 +50,17 @@ local function getResources(playerName)
 	return nil
 end
 
--- 🔁 Nút cập nhật danh sách người chơi
+Dropdown_FarmTarget = Tab_Farm:CreateDropdown({
+	Name = "Chọn đảo để farm",
+	Options = PlayerList,
+	CurrentOption = SelectedPlayer,
+	Flag = "FarmTarget",
+	Callback = function(option)
+		SelectedPlayer = option
+		print("Đã chọn đảo:", SelectedPlayer)
+	end,
+})
+
 Tab_Farm:CreateButton({
 	Name = "Cập nhật người chơi",
 	Callback = function()
@@ -78,19 +75,6 @@ Tab_Farm:CreateButton({
 	end,
 })
 
--- 🏝️ Dropdown chọn đảo cần farm
-Dropdown_FarmTarget = Tab_Farm:CreateDropdown({
-	Name = "Chọn đảo để farm",
-	Options = PlayerList,
-	CurrentOption = SelectedPlayer,
-	Flag = "FarmTarget",
-	Callback = function(option)
-		SelectedPlayer = option
-		print("Đã chọn đảo:", SelectedPlayer)
-	end,
-})
-
--- ⚒️ Auto Farm toàn đảo
 Tab_Farm:CreateToggle({
 	Name = " Auto Farm toàn đảo (máy yếu có thể tuột còn 0-10 fps)",
 	CurrentValue = false,
@@ -123,20 +107,75 @@ Tab_Farm:CreateToggle({
 	end,
 })
 
--- TAB 3: CRAFT
+local expand_delay = 0.1
+
+Tab_Farm:CreateToggle({
+	Name = "Auto nâng cấp đảo",
+	CurrentValue = false,
+	Flag = "AutoExpand",
+	Callback = function(Value)
+		if Value then
+			task.spawn(function()
+				while Rayfield.Flags.AutoExpand.CurrentValue do
+					local plr = game:GetService("Players").LocalPlayer
+					local plot = workspace:WaitForChild("Plots"):FindFirstChild(plr.Name)
+					if plot then
+						local expand = plot:FindFirstChild("Expand")
+						if expand then
+							for _, exp in ipairs(expand:GetChildren()) do
+								local top = exp:FindFirstChild("Top")
+								if top then
+									local bGui = top:FindFirstChild("BillboardGui")
+									if bGui then
+										for _, contribute in ipairs(bGui:GetChildren()) do
+											if contribute:IsA("Frame") and contribute.Name ~= "Example" then
+												local args = {
+													exp.Name,
+													contribute.Name,
+													1
+												}
+												game:GetService("ReplicatedStorage")
+													:WaitForChild("Communication")
+													:WaitForChild("ContributeToExpand")
+													:FireServer(unpack(args))
+											end
+										end
+									end
+								end
+								task.wait(0.01)
+							end
+						end
+					end
+					task.wait(expand_delay)
+				end
+			end)
+		end
+	end,
+})
+
+Tab_Farm:CreateSlider({
+	Name = "Expand Delay (giây)",
+	Range = {0.1, 5},
+	Increment = 0.1,
+	Suffix = "s",
+	CurrentValue = expand_delay,
+	Flag = "ExpandDelay",
+	Callback = function(v)
+		expand_delay = v
+	end,
+})
+
 local Tab_Craft = Window:CreateTab("🛠️ Craft", 4483362458)
 Tab_Craft:CreateParagraph({
 	Title = "",
 	Content = "beta"
 })
 
--- Biến lưu cài đặt
 local selected_crafter = nil
 local auto_craft_enabled = false
 local craft_delay = 2
-local crafter_dropdown = nil -- tham chiếu dropdown để cập nhật danh sách
+local crafter_dropdown = nil 
 
--- Hàm lấy danh sách crafter
 local function getCrafters()
 	local list = {}
 	for _, c in pairs(game:GetService("Workspace").Plots[game.Players.LocalPlayer.Name]:GetDescendants()) do
@@ -150,7 +189,6 @@ local function getCrafters()
 	return list
 end
 
--- Dropdown chọn Crafter
 crafter_dropdown = Tab_Craft:CreateDropdown({
 	Name = " Chọn vật phẩm Craft",
 	Options = getCrafters(),
@@ -162,7 +200,6 @@ crafter_dropdown = Tab_Craft:CreateDropdown({
 	end,
 })
 
--- Nút cập nhật danh sách craft
 Tab_Craft:CreateButton({
 	Name = "Cập nhật danh sách nơi Craft",
 	Callback = function()
@@ -172,7 +209,6 @@ Tab_Craft:CreateButton({
 	end,
 })
 
--- Thanh chỉnh delay
 Tab_Craft:CreateSlider({
 	Name = " Delay mỗi lần Craft (giây)",
 	Range = {1, 20},
@@ -185,7 +221,6 @@ Tab_Craft:CreateSlider({
 	end,
 })
 
--- Nút bật Auto Craft
 Tab_Craft:CreateToggle({
 	Name = "Auto Craft",
 	CurrentValue = false,
@@ -216,23 +251,19 @@ Tab_Craft:CreateToggle({
 	end
 })
 
--- TAB 4: SHOP
 local Tab_Shop = Window:CreateTab("🛒 Shop", 4483362458)
 Tab_Shop:CreateParagraph({
 	Title = "beta",
 	Content = "nói chuyện với npc merchant và mua vài món hàng để script load vật phẩm để mua"
 })
 
--- ⏰ Hiển thị thời gian reset stock (đếm ngược)
 local timerLabel
 
--- Thêm nhãn ban đầu
 timerLabel = Tab_Shop:CreateParagraph({
 	Title = "Reset shop sau...",
 	Content = "Đang tải..."
 })
 
--- Cập nhật nội dung mỗi 1 giây
 task.spawn(function()
 	while true do
 		local gui = game.Players.LocalPlayer:FindFirstChild("PlayerGui")
@@ -259,7 +290,6 @@ local shownItems = {}
 local allItems = {}
 local autoBuying = false
 
--- 🧠 Tự động quét danh sách item trong shop
 task.spawn(function()
 	while true do
 		local gui = game.Players.LocalPlayer:FindFirstChild("PlayerGui")
@@ -298,7 +328,6 @@ task.spawn(function()
 	end
 end)
 
--- ♻️ Auto Buy Toggle
 Tab_Shop:CreateToggle({
 	Name = "Auto Buy các vật phẩm đã chọn",
 	CurrentValue = false,
@@ -322,13 +351,11 @@ Tab_Shop:CreateToggle({
 	end
 })
 
--- ⏰ Nhãn reset
 Tab_Shop:CreateParagraph({
 	Title = "Shop Reset",
 	Content = "Danh sách cập nhật tự động khi mở shop"
 })
 
--- TAB 5: SELL
 local Tab_Sell = Window:CreateTab("💰 Sell", 4483362458)
 Tab_Sell:CreateParagraph({
 	Title = "",
@@ -366,14 +393,12 @@ Tab_Sell:CreateToggle({
 	end
 })
 
--- TAB 6: COLLECT
 local Tab_Collect = Window:CreateTab("📦 Collect", 4483362458)
 Tab_Collect:CreateParagraph({
 	Title = "tính năng thu hoạch cá sẽ được cập nhật sau",
 	Content = ""
 })
 
--- Auto Harvest trái cây
 Tab_Collect:CreateToggle({
 	Name = "Auto Harvest Plants",
 	CurrentValue = false,
@@ -394,7 +419,6 @@ Tab_Collect:CreateToggle({
 	end
 })
 
--- Auto thu hoạch mật ong
 Tab_Collect:CreateToggle({
 	Name = "Auto Collect Honey",
 	CurrentValue = false,
@@ -415,7 +439,6 @@ Tab_Collect:CreateToggle({
 	end
 })
 
--- Auto thu hoạch vàng
 Tab_Collect:CreateToggle({
 	Name = " Auto Collect Gold",
 	CurrentValue = false,
@@ -436,14 +459,12 @@ Tab_Collect:CreateToggle({
 	end
 })
 
--- TAB 7: EVENTS
 local Tab_Events = Window:CreateTab("🎉 Events", 4483362458)
 Tab_Events:CreateParagraph({
 	Title = "Chưa có tính năng",
 	Content = "Tính năng Events sẽ được cập nhật sau:(("
 })
 
--- TAB 8: MISC
 local Tab_Misc = Window:CreateTab("🧩 Misc", 4483362458)
 Tab_Misc:CreateParagraph({
 	Title = "",
@@ -475,7 +496,7 @@ Tab_Misc:CreateToggle({
 	end,
 })
 
--- 🏃 Tăng tốc độ di chuyển
+
 Tab_Misc:CreateSlider({
 	Name = "Speed Nhân Vật",
 	Range = {16, 50},
@@ -487,19 +508,31 @@ Tab_Misc:CreateSlider({
 	end,
 })
 
--- ⬆️ Nhảy cao
-Tab_Misc:CreateSlider({
-	Name = "Độ Nhảy Cao (đang lỗi:D)",
-	Range = {50, 150},
-	Increment = 5,
-	CurrentValue = 50,
-	Flag = "JumpPower",
-	Callback = function(Value)
-		game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
+
+Tab_Misc:CreateToggle({
+	Name = " Infinity Jump",
+	CurrentValue = false,
+	Flag = "InfJump",
+	Callback = function(state)
+		if state then
+			
+			infJumpConnection = game:GetService("UserInputService").JumpRequest:Connect(function()
+				local player = game.Players.LocalPlayer
+				local character = player.Character or player.CharacterAdded:Wait()
+				local humanoid = character:FindFirstChildOfClass("Humanoid")
+				if humanoid then
+					humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+				end
+			end)
+		else
+			
+			if infJumpConnection then
+				infJumpConnection:Disconnect()
+			end
+		end
 	end,
 })
 
--- 🔁 Rejoin server
 Tab_Misc:CreateButton({
 	Name = "Rejoin Server (chỉ hoạt động với server công cộng)",
 	Callback = function()
